@@ -1,0 +1,742 @@
+variables
+{
+	global:
+		12: MAX_SCORE
+		13: IS_AMMOMOD
+		14: IS_ARENA
+		15: ARENA_POS
+		16: USE_ARENA
+		18: SIZE
+		26: SPAWN_LOC
+		27: TEAM1_SCORE
+		28: TEAM2_SCORE
+
+	player:
+		2: CURR_HERO
+		7: HERO_SELECT
+		13: A2P
+		17: RESPAWN
+		18: SCORE
+		23: SETUP
+}
+
+disabled rule("---------- Globals & Statics ----------")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("[[[ Settable variables (Set hero pool and map in game settings) ]]]")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	actions
+	{
+		Set Global Variable(MAX_SCORE, 15);
+		Set Global Variable(IS_AMMOMOD, False);
+		Set Global Variable(USE_ARENA, True);
+	}
+}
+
+rule("CONFIGURE PLAYER")
+{
+	event
+	{
+		Player Joined Match;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Player Variable(Event Player, SETUP) < 1;
+	}
+
+	actions
+	{
+		Disable Built-In Game Mode Respawning(Event Player);
+		Set Player Variable(Event Player, RESPAWN, False);
+		Set Player Variable(Event Player, HERO_SELECT, False);
+		Set Player Variable(Event Player, SCORE, 0);
+		Modify Player Variable(Event Player, SETUP, Add, 1);
+		Create HUD Text(Event Player, Null, Custom String("Playing to: {0}", Global Variable(MAX_SCORE), Null, Null), Null, Top, -1.000,
+			Purple, White, White, Visible To and String, Default Visibility);
+	}
+}
+
+rule("REDUCE ASSEMBLING HEROES")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Assembling Heroes == True;
+	}
+
+	actions
+	{
+		Set Match Time(7);
+	}
+}
+
+rule("EXTEND MATCH TIME")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Is Game In Progress == True;
+	}
+
+	actions
+	{
+		Set Match Time(3599);
+		Set Global Variable(TEAM1_SCORE, 0);
+		Set Global Variable(TEAM2_SCORE, 0);
+	}
+}
+
+rule("[DEBUG]")
+{
+	event
+	{
+		Player Joined Match;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Player Variable(Event Player, SETUP) < 2;
+	}
+
+	actions
+	{
+		Create HUD Text(Event Player, Custom String("{0}", Position Of(Event Player), Null, Null), Null, Null, Left, 0, White, White,
+			White, String, Default Visibility);
+		disabled Create HUD Text(Event Player, Custom String("{0}", Subtract(Total Time Elapsed, Player Variable(Event Player, HERO_SELECT)), Null,
+			Null), Null, Null, Left, 0, Lime Green, White, White, String, Default Visibility);
+		Create HUD Text(Event Player, Custom String("{0} | {1}", Global Variable(TEAM1_SCORE), Global Variable(TEAM2_SCORE), Null), Null,
+			Null, Left, 0, White, White, White, Visible To and String, Default Visibility);
+		Modify Player Variable(Event Player, SETUP, Add, 1);
+	}
+}
+
+disabled rule("[DEBUG] Increment Score")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Communicating(Event Player, Group Up) == True;
+	}
+
+	actions
+	{
+		Modify Team Score(Team Of(Event Player), 1);
+		Skip If(Compare(Team Of(Event Player), !=, Team 1), 1);
+		Modify Global Variable(TEAM1_SCORE, Add, 1);
+		Skip If(Compare(Team Of(Event Player), !=, Team 2), 1);
+		Modify Global Variable(TEAM2_SCORE, Add, 1);
+	}
+}
+
+disabled rule("---------- Arenas ----------")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("ARENA LOC & SPAWNS - BLACK FOREST")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Black Forest);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(-20.000, 8, 4.923));
+		Set Global Variable(SIZE, 21);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-6.471, 19.282, 5.101));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-13.450, 14.529, 18.633));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-12.937, 14.501, -9.011));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-18.816, 13.444, 6.031));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - CHATEAU GUILLARD")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Château Guillard);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(214.495, 0, 48.766));
+		Set Global Variable(SIZE, 25);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(196.319, 17.699, 46.942));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(218.683, 13.198, 45.779));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(216.578, 15.198, 64.937));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(205.900, 9.202, 70.658));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - DORADO")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Dorado);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(124, 5, -18.500));
+		Set Global Variable(SIZE, 20);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(117.071, 9.360, -8.320));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(116.451, 12.581, -30.376));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(138.021, 12.581, -14.036));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(130.599, 10.596, -26.579));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - ECOPOINT: ANTARCTICA")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Ecopoint: Antarctica);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(-1.000, 3, 0));
+		Set Global Variable(SIZE, 26);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(1.924, 13.351, 11.356));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(2.301, 13.348, -12.244));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(17.976, 10.349, 0.416));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-10.905, 9.874, -0.518));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - HANAMURA")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Hanamura);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(15.500, -2.000, -48.340));
+		Set Global Variable(SIZE, 19);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(19.920, -0.472, -36.837));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(1.731, -0.318, -51.494));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(16.893, -0.508, -63.574));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-0.330, 6.348, -47.042));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - ILIOS LIGHTHOUSE")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Ilios Lighthouse);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(280.502, -30.000, -86.752));
+		Set Global Variable(SIZE, 25);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(286.533, -24.322, -95.197));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(292.310, -23.444, -72.957));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(274.367, -17.438, -78.573));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(268.743, -22.571, -101.324));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - ILIOS RUINS")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Ilios Ruins);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(-56.934, 50, -168.403));
+		Set Global Variable(SIZE, 26);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-69.714, 63.926, -155.213));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-54.952, 66.256, -179.366));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-51.567, 61.697, -151.493));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-36.994, 59.974, -167.142));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - LIJIANG CONTROL CENTER")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Lijiang Control Center);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(0, 265, 274));
+		Set Global Variable(SIZE, 22);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-0.087, 270.982, 292.809));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-12.301, 268.715, 275.398));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(12.309, 268.715, 275.997));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(0.146, 271.551, 267.764));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - LIJIANG NIGHT MARKET")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Lijiang Night Market);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(1.003, 0, -28.000));
+		Set Global Variable(SIZE, 23);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(14.785, 1.198, -16.568));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(1.003, 0.061, -33.586));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(1.044, 0.202, -44.273));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(1.069, 1.198, -14.922));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("ARENA LOC & SPAWNS - NEPAL VILLAGE")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(USE_ARENA) == True;
+		Current Map == Map(Nepal Village);
+	}
+
+	actions
+	{
+		Set Global Variable(ARENA_POS, Vector(-184.121, -95.000, 0.047));
+		Set Global Variable(SIZE, 27);
+		disabled Disable Built-In Game Mode Completion;
+		disabled Respawn(All Players(All Teams));
+		Set Global Variable(SPAWN_LOC, Empty Array);
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-170.377, -90.838, 11.635));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-171.009, -90.829, -11.892));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-204.533, -86.780, -0.220));
+		Modify Global Variable(SPAWN_LOC, Append To Array, Vector(-178.099, -92.751, 0.052));
+		Set Global Variable(IS_ARENA, True);
+	}
+}
+
+rule("CREATE ARENA")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(IS_ARENA) == True;
+	}
+
+	actions
+	{
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Global Variable(ARENA_POS), Global Variable(SIZE),
+			Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 0.200, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 0.400, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 0.600, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 0.800, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 1, 0)), Global Variable(
+			SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 1.200, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 1.400, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 1.600, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+		Create Effect(All Players(All Teams), Light Shaft, Blue, Subtract(Global Variable(ARENA_POS), Vector(0, 1.800, 0)),
+			Global Variable(SIZE), Visible To Position and Radius);
+	}
+}
+
+disabled rule("---------- Match Logic ----------")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+}
+
+rule("Enable Ammomod")
+{
+	event
+	{
+		Player Joined Match;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Global Variable(IS_AMMOMOD) == True;
+	}
+
+	actions
+	{
+		Set Max Health(Event Player, 500);
+	}
+}
+
+rule("Barrier logic")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Global Variable(IS_ARENA) == True;
+		Has Spawned(Event Player) == True;
+		Player Variable(Event Player, RESPAWN) == False;
+		Distance Between(Vector(X Component Of(Global Variable(ARENA_POS)), 0, Z Component Of(Global Variable(ARENA_POS))), Vector(
+			X Component Of(Position Of(Event Player)), 0, Z Component Of(Position Of(Event Player)))) > Subtract(Global Variable(SIZE),
+			1.500);
+	}
+
+	actions
+	{
+		Set Player Variable(Event Player, A2P, Vector(X Component Of(Global Variable(ARENA_POS)), Y Component Of(Position Of(
+			Event Player)), Z Component Of(Global Variable(ARENA_POS))));
+		Teleport(Event Player, Add(Player Variable(Event Player, A2P), Multiply(Normalize(Subtract(Position Of(Event Player),
+			Player Variable(Event Player, A2P))), Subtract(Global Variable(SIZE), 2.250))));
+		Wait(0.250, Ignore Condition);
+		Loop If Condition Is True;
+	}
+}
+
+disabled rule("First spawn")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Has Spawned(Event Player) == True;
+	}
+
+	actions
+	{
+		Set Player Variable(Event Player, RESPAWN, True);
+		Heal(Event Player, Null, Max Health(Event Player));
+	}
+}
+
+rule("Respawn")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Player Variable(Event Player, RESPAWN) == True;
+	}
+
+	actions
+	{
+		Wait(0.250, Ignore Condition);
+		Set Status(Event Player, Null, Unkillable, 1.800);
+		Skip If(Not(Global Variable(IS_ARENA)), 1);
+		Teleport(Event Player, Random Value In Array(Global Variable(SPAWN_LOC)));
+		Set Player Variable(Event Player, CURR_HERO, Hero Of(Event Player));
+		Set Player Variable(Event Player, RESPAWN, False);
+		Set Player Variable(Event Player, HERO_SELECT, Total Time Elapsed);
+		Heal(Event Player, Null, Max Health(Event Player));
+	}
+}
+
+rule("Hero select")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Health(Event Player) == Max Health(Event Player);
+		Is Button Held(Event Player, Interact) == True;
+		Is Button Held(Event Player, Crouch) == True;
+		Subtract(Total Time Elapsed, Player Variable(Event Player, HERO_SELECT)) < 4;
+	}
+
+	actions
+	{
+		Set Player Variable(Event Player, CURR_HERO, Hero Of(Event Player));
+		Set Player Allowed Heroes(Event Player, Remove From Array(Allowed Heroes(Event Player), Player Variable(Event Player, CURR_HERO)));
+	}
+}
+
+rule("Respawn from hero select")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Player Variable(Event Player, RESPAWN) == False;
+		Is Alive(Event Player) == True;
+		Player Variable(Event Player, CURR_HERO) != Hero Of(Event Player);
+	}
+
+	actions
+	{
+		Reset Player Hero Availability(Event Player);
+		Set Player Variable(Event Player, RESPAWN, True);
+	}
+}
+
+rule("On death")
+{
+	event
+	{
+		Player Died;
+		All;
+		All;
+	}
+
+	actions
+	{
+		Set Player Variable(Event Player, RESPAWN, False);
+		Destroy HUD Text(Player Variable(Event Player, D));
+		Set Player Variable At Index(Event Player, K, 0, Hero Of(Attacker));
+		Set Player Variable At Index(Event Player, K, 1, Health(Attacker));
+		Create HUD Text(Event Player, Custom String("{0} left with {1}hp", Hero Icon String(Value In Array(Player Variable(Event Player,
+			K), 0)), Value In Array(Player Variable(Event Player, K), 1), Null), Null, Null, Top, 0, Red, White, White,
+			Visible To and String, Default Visibility);
+		Set Player Variable(Event Player, D, Last Text ID);
+		Heal(Attacker, Null, Max Health(Attacker));
+		Set Global Variable(I, 1);
+		Skip If(Compare(Team Of(Event Player), !=, Team Of(Attacker)), 1);
+		Set Global Variable(I, -1.000);
+		Skip If(Compare(Team Of(Attacker), !=, Team 1), 1);
+		Modify Global Variable(TEAM1_SCORE, Add, Global Variable(I));
+		Skip If(Compare(Team Of(Attacker), !=, Team 2), 1);
+		Modify Global Variable(TEAM2_SCORE, Add, Global Variable(I));
+		Wait(1, Ignore Condition);
+		Respawn(Event Player);
+		Set Player Variable(Event Player, RESPAWN, True);
+	}
+}
+
+rule("Match end - Team 1")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(TEAM1_SCORE) == Global Variable(MAX_SCORE);
+		Global Variable(TEAM2_SCORE) != Global Variable(MAX_SCORE);
+	}
+
+	actions
+	{
+		Play Effect(All Players(All Teams), Buff Explosion Sound, White, Position Of(All Players(All Teams)), 100);
+		Big Message(All Players(All Teams), Custom String("{0} Wins", Team 1, Null, Null));
+		Set Slow Motion(10);
+		Wait(0.800, Ignore Condition);
+		Set Slow Motion(100);
+		Go To Assemble Heroes;
+		Set Global Variable(TEAM1_SCORE, 0);
+		Set Global Variable(TEAM2_SCORE, 0);
+		Set Team Score(All Teams, 0);
+	}
+}
+
+rule("Match end - Team 2")
+{
+	event
+	{
+		Ongoing - Global;
+	}
+
+	conditions
+	{
+		Global Variable(TEAM2_SCORE) == Global Variable(MAX_SCORE);
+		Global Variable(TEAM1_SCORE) != Global Variable(MAX_SCORE);
+	}
+
+	actions
+	{
+		Big Message(All Players(All Teams), Custom String("{0} Wins", Team 2, Null, Null));
+		Set Slow Motion(10);
+		Wait(0.800, Ignore Condition);
+		Set Slow Motion(100);
+		Go To Assemble Heroes;
+		Set Global Variable(TEAM1_SCORE, 0);
+		Set Global Variable(TEAM2_SCORE, 0);
+		Set Team Score(All Teams, 0);
+	}
+}
+
+disabled rule("Rule 27")
+{
+	event
+	{
+		Ongoing - Each Player;
+		All;
+		All;
+	}
+
+	conditions
+	{
+		Is Button Held(Event Player, Ultimate) == True;
+	}
+
+	actions
+	{
+		Teleport(Event Player, Position Of(Random Value In Array(All Living Players(All Teams))));
+	}
+}
